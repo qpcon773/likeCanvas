@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .like_canvas{
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: 0;
+            transform: translate(-50%,-50%);
+            background:conic-gradient(
+                #698AF7 0deg var(--bar1),
+                #D95E68 var(--bar1) var(--bar2),
+                #FCCE56 var(--bar2) var(--bar3),
+                #2ED69E var(--bar3) 360deg
+            );
+        }
+
+        .mask{
+            width: 360px;
+            height: 360px;
+            background: #fff;
+            border-radius: 50%;
+            top: 20px;
+            left: 20px;
+            position: relative;
+            z-index: 50;
+        }
+
+        .maskB{
+            display: block;
+            width: calc(100% + 2px);
+            height: calc(100% + 2px);
+            background: conic-gradient(rgba(0,0,0,0) var(--maskDeg),#fff 0deg);
+            border-radius: 50%;
+            top: -1px;
+            left: -1px;
+            position: absolute;
+            z-index: 51;
+        }
+
+        .maskB.focus::before,.maskB.focus::after{
+            display: none;
+        }
+
+        .maskB.focus .like_dot{
+            display: none;
+        }
+
+        .maskB::before{
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            top: 1px;
+            left: calc(50% - 1px);
+            transform: translateX(-50%);
+            border-radius: 100px 0 0 100px;
+            background: #698AF7;
+            z-index: 12;
+        }
+
+        .maskB::after{
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            top: 1px;
+            left: calc(50% + 1px);
+            border-radius: 0 100px 100px 0;
+            background: #698AF7;
+            z-index: 12;
+        }
+
+        @keyframes roll{
+            from{
+                transform: translateX(-50%) rotate(0deg);
+            }
+            to{
+                transform: translateX(-50%) rotate(360deg);
+            }
+        }
+
+        .like_dot{
+            position: absolute;
+            width: 20px;
+            height: calc(50% - 1px);
+            top: 1px;
+            left: calc(50%);
+            transform: translateX(-50%);
+            transform-origin: bottom;
+            animation-name: roll;
+            animation-duration: 0.86s;
+            animation-timing-function: linear;
+        }
+
+        .like_dot::before{
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 20px;
+            border-radius: 0 100px 100px 0;
+            background: #fff;
+            z-index: 11;
+        }
+
+        .bar{
+            display: none;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .bar.focus{
+            display: block;
+        }
+
+        .dot{
+            display: block;
+            position: absolute;
+            width: 20px;
+            height: 50%;
+            top: 0;
+            left: 50%;
+            transform-origin: bottom;
+            transform: translateX(-50%) rotate(var(--dotRatio));
+        }
+
+        .dot::after{
+            content: "";
+            width: 2px;
+            height: 20px;
+            top: 0;
+            right: 8px;
+            position: absolute;
+            transform: translateX(-50%);
+        }
+
+        .dot::before,.end::before{
+            content: "";
+            width: 10px;
+            height: 20px;
+            top: 0;
+            left: 50%;
+            position: absolute;
+        }
+
+        .bar .dot::before{
+            border-radius: 0 100px 100px 0;
+        }
+
+        .blue .dot::before,.blue .dot::after{
+            background: #698AF7;
+            z-index: 10;
+        }
+
+        .red .dot::before,.red .dot::after{
+            background: #D95E68;
+            z-index: 9;
+        }
+
+        .yellow .dot::before,.yellow .dot::after{
+            background: #FCCE56;
+            z-index: 8;
+        }
+
+        .green .dot::before,.green .dot::after{
+            background: #2ED69E;
+            z-index: 7;
+        }
+    </style>
+</head>
+<body>
+        <div class="like_canvas" style="--bar1: 0deg; --bar2: 0deg; --bar3: 0deg;">
+            <div class="mask"></div>
+            <div class="maskB" style="--maskDeg: 0deg;">
+                <b class="like_dot"></b>
+            </div>
+            <span class="bar blue">
+                <b class="dot" style="--dotRatio: 0"></b>
+            </span>
+            <span class="bar red">
+                <b class="dot" style="--dotRatio: 0"></b>
+            </span>
+            <span class="bar yellow">
+                <b class="dot" style="--dotRatio: 0"></b>
+            </span>
+            <span class="bar green">
+                <b class="dot" style="--dotRatio: 0"></b>
+            </span>
+        </div>
+
+    <script>
+        function chart (value){
+            this.count = 0
+            this.total = 0
+            this.deg = 0
+            this.value = value
+            this.main = document.querySelector(".like_canvas")
+            this.bars = document.querySelectorAll(".bar")
+            this.create = function(){
+                this.each("sum")
+                this.each("percent")
+                this.each("draw")
+                this.animation()
+            }
+            this.each = function(mode){
+                this.value.forEach((e,i)=>{
+                    if(mode == "sum"){
+                        this.total += e
+                    }else if(mode == "percent"){
+                        this.value[i] = (e / this.total * 100).toFixed(0)
+                    }else if(mode == "draw"){
+                        if(i+1 < this.value.length){
+                            this.main.style.setProperty(`--bar${i + 1}`,`${((this.count)+(e * 3.6)).toFixed(0)}deg`)
+                            this.bars[i].children[0].style.setProperty(`--dotRatio`,`${((this.count)+(e * 3.6)).toFixed(0)}deg`)
+                            this.count += e * 3.6
+                        }else{
+                            this.bars[i].children[0].style.setProperty(`--bar${i + 1}`,`360deg`)
+                            this.main.style.setProperty(`--bar${i + 1}`,`360deg`)
+                        }
+                        this.bars[i].classList.add("focus")
+                    }
+                })
+            }
+            this.animation = async function(){
+                const time = function(deg){
+                    return new Promise(function(){
+                        setTimeout(function(){
+                            document.querySelector(".maskB").style.setProperty("--maskDeg",`${deg}deg`)
+                            chart1.deg += 9
+                            chart1.animation()
+                        },20)
+                    })
+                }
+                
+                if (this.deg <= 360) time(this.deg)
+                else document.querySelector(".maskB").classList.add("focus")
+            }
+        }
+
+        const chart1 = new chart([240000,240000,100000,420000])
+        chart1.create()
+    </script>
+</body>
+</html>
